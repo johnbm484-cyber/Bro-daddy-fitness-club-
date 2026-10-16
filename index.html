@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101010">
+<title>Brodaddy Fitness Club</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101010;color:#fff;font-family:Arial,sans-serif}
+header{padding:24px 18px;background:#181818;border-bottom:2px solid #D4AF37}
+.logo{color:#D4AF37;font-size:23px;font-weight:900}
+.sub{color:#aaa;font-size:12px;letter-spacing:2px;margin-top:5px}
+main{padding:18px;max-width:650px;margin:auto}
+h2{font-size:25px}
+.gold{color:#D4AF37}
+.card{background:#1c1c1c;border:1px solid #393939;border-radius:14px;padding:17px;margin:15px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.metric{background:#252525;padding:15px;border-radius:10px}
+.metric strong{display:block;color:#D4AF37;font-size:24px;margin-top:8px}
+button{background:#D4AF37;color:#111;border:0;border-radius:9px;padding:12px;font-weight:bold;cursor:pointer}
+input,select{background:#111;color:white;border:1px solid #555;border-radius:7px;padding:12px;width:100%;margin:6px 0}
+label{font-size:13px;color:#ccc}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+nav button{flex:1;min-width:90px}
+section{display:none}
+section.active{display:block}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:10px 0}
+.small{font-size:12px;color:#aaa}
+footer{text-align:center;color:#888;font-size:12px;padding:24px}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">BRODADDY FITNESS CLUB</div>
+<div class="sub">TRAIN HARD • STAY CONSISTENT</div>
+</header>
+<main>
+<h2>Welcome, <span class="gold">Champion!</span></h2>
+<p style="color:#aaa">Your fitness journey starts here.</p>
+<div class="grid">
+<div class="metric">Workouts logged<strong id="total">0</strong></div>
+<div class="metric">Today's goal<strong>100%</strong></div>
+</div>
+<nav>
+<button onclick="show('home')">Home</button>
+<button onclick="show('workout')">Workout</button>
+<button onclick="show('food')">Nutrition</button>
+<button onclick="show('profile')">Profile</button>
+</nav>
+<section id="home" class="active">
+<div class="card"><h3 class="gold">Today's Mission</h3><p>Show up. Train with purpose. Record your progress.</p><button onclick="show('workout')">Start workout</button></div>
+<div class="card"><h3>🏋️ Training tip</h3><p>Use controlled reps and good form. Increase weight gradually when you can complete every set safely.</p></div>
+<div class="card"><h3>🥗 Nutrition tip</h3><p>Include a protein source at each meal, vegetables, fruit and enough water.</p></div>
+</section>
+<section id="workout">
+<div class="card"><h3 class="gold">Log your workout</h3>
+<label>Exercise</label><input id="exercise" placeholder="e.g. Bench press">
+<label>Weight (kg)</label><input id="weight" type="number" min="0" placeholder="Weight">
+<label>Sets</label><input id="sets" type="number" min="1" value="3">
+<label>Reps per set</label><input id="reps" type="number" min="1" value="10">
+<button onclick="saveWorkout()">Save workout</button>
+<div id="logs"></div>
+</div>
+<div class="card"><h3>Rest timer</h3><div class="gold" id="timer" style="font-size:32px">01:30</div><button onclick="startTimer()">Start 90 sec</button><button onclick="stopTimer()">Stop</button></div>
+</section>
+<section id="food">
+<div class="card"><h3 class="gold">Indian Food Calorie Estimator</h3>
+<label>Choose a food</label>
+<select id="meal">
+<option value="130,4,28">Cooked rice (100 g)</option>
+<option value="110,3.5,18">Chapati (1 medium)</option>
+<option value="165,9,6">Cooked dal (100 g)</option>
+<option value="165,31,0">Chicken breast (100 g)</option>
+<option value="150,12,2">Paneer (100 g)</option>
+<option value="78,6,0.6">Boiled egg (1)</option>
+<option value="97,3.5,17">Idli (2 small)</option>
+<option value="250,8,40">Poha (1 serving)</option>
+</select>
+<label>Number of servings</label><input id="servings" type="number" value="1" min="0.5" step="0.5">
+<button onclick="calcFood()">Calculate nutrition</button>
+<div class="grid" style="margin-top:15px">
+<div class="metric">Calories<strong id="cal">0</strong></div>
+<div class="metric">Protein<strong id="protein">0 g</strong></div>
+</div>
+<p class="small">Estimates only. Actual nutrition varies by portion and preparation.</p>
+</div>
+</section>
+<section id="profile">
+<div class="card"><h3 class="gold">Your profile</h3>
+<label>Body weight (kg)</label><input id="bodyweight" type="number" placeholder="e.g. 74">
+<label>Height (cm)</label><input id="height" type="number" placeholder="e.g. 167">
+<button onclick="calcBMI()">Calculate BMI</button>
+<h3 id="bmi"></h3>
+<button onclick="exportData()">Export my data</button>
+<p class="small">Your workout records are saved in this browser on this device.</p>
+</div>
+</section>
+</main>
+<footer>DISCIPLINE BUILDS RESULTS • BRODADDY FITNESS CLUB</footer>
+<script>
+function show(id){document.querySelectorAll('section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+let workouts=JSON.parse(localStorage.getItem('brodaddy_workouts')||'[]');
+function render(){document.getElementById('total').textContent=workouts.length;document.getElementById('logs').innerHTML=workouts.slice().reverse().map(w=>'<div class="row"><span>'+escapeText(w.name)+'<br><span class="small">'+w.weight+' kg • '+w.sets+' × '+w.reps+'</span></span><button onclick="deleteWorkout('+w.id+')">Delete</button></div>').join('')}
+function escapeText(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function saveWorkout(){let name=document.getElementById('exercise').value.trim(),weight=Number(document.getElementById('weight').value)||0,sets=Number(document.getElementById('sets').value),reps=Number(document.getElementById('reps').value);if(!name||sets<1||reps<1){alert('Enter an exercise, sets and reps.');return}workouts.push({id:Date.now(),name,weight,sets,reps,date:new Date().toISOString()});localStorage.setItem('brodaddy_workouts',JSON.stringify(workouts));document.getElementById('exercise').value='';render();alert('Workout saved!')}
+function deleteWorkout(id){workouts=workouts.filter(w=>w.id!==id);localStorage.setItem('brodaddy_workouts',JSON.stringify(workouts));render()}
+function calcFood(){let [c,p]=document.getElementById('meal').value.split(',').map(Number),n=Math.max(0,Number(document.getElementById('servings').value)||0);document.getElementById('cal').textContent=Math.round(c*n);document.getElementById('protein').textContent=(p*n).toFixed(1)+' g'}
+function calcBMI(){let w=Number(document.getElementById('bodyweight').value),h=Number(document.getElementById('height').value);if(w<=0||h<=0){alert('Enter valid weight and height.');return}document.getElementById('bmi').textContent='BMI: '+(w/((h/100)**2)).toFixed(1)}
+let interval=null,remaining=90;
+function updateTimer(){document.getElementById('timer').textContent=String(Math.floor(remaining/60)).padStart(2,'0')+':'+String(remaining%60).padStart(2,'0')}
+function startTimer(){stopTimer();remaining=90;updateTimer();interval=setInterval(()=>{remaining--;updateTimer();if(remaining<=0){stopTimer();alert('Rest complete!')}} ,1000)}
+function stopTimer(){if(interval)clearInterval(interval);interval=null}
+function exportData(){let blob=new Blob([JSON.stringify({workouts},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='brodaddy-fitness-data.json';a.click();URL.revokeObjectURL(a.href)}
+render();
+</script>
+</body>
+</html>
